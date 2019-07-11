@@ -98,7 +98,7 @@ class Blockchain(object):
         """
         guess = f'{last_proof}{proof}'.encode()
         guess_hash = hashlib.sha256(guess).hexdigest()
-        return guess_hash[:4] == "0000"
+        return guess_hash[:6] == "000000"
         # return guess_hash[:6] == "000000"
 
     def valid_chain(self, chain):
@@ -144,21 +144,23 @@ blockchain = Blockchain()
 @app.route('/mine', methods=['POST'])
 def mine():
 
-    sender = request.get_json()['sender']
+    # sender = request.get_json()['sender']
     proof = request.get_json()['proof']
     # We run the proof of work algorithm to get the next proof...
     last_block = blockchain.last_block
     last_proof = last_block['proof']
 
     values = request.get_json()
+
+    #  Check that the required fields are in the POSTed data
     required = ['proof']
-    # if not all(k in values for k in required):
-    #         return 'Missing Values', 400
+    if not all(k in values for k in required):
+            return 'Missing Values', 400
 
     if blockchain.valid_proof(last_proof, proof) is True:
         # We must receive a reward for finding the proof.
         # The sender is "0" to signify that this node has mine a new coin
-        blockchain.new_transaction(sender, sender, 1)
+        blockchain.new_transaction('0', node_identifier, 1)
 
         # Forge the new BLock by adding it to the chain
         previous_hash = blockchain.hash(last_block)
